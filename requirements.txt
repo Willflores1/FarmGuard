@@ -1,0 +1,13 @@
+fastapi[standard]
+uvicorn[standard]
+python-multipart
+
+numpy
+pillow
+
+tensorflow
+torch
+torchvision
+
+google-cloud-storage
+google-cloud-firestore
