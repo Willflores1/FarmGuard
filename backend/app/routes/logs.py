@@ -1,7 +1,7 @@
 from typing import Optional
 from fastapi import APIRouter
 
-from backend.app.services.firestore_service import fetch_logs
+from app.services.firestore_service import fetch_logs
 
 router = APIRouter()
 

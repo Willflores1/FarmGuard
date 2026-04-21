@@ -1,13 +1,8 @@
 from pathlib import Path
 import io
 
-import numpy as np
-import tensorflow as tf
-from PIL import Image
-
 BASE_DIR = Path(__file__).resolve().parents[2]
 MODEL_DIR = BASE_DIR / "models" / "soil"
-
 MODEL_PATH = MODEL_DIR / "soil_moisture_binary.keras"
 
 _model = None
@@ -16,11 +11,15 @@ _model = None
 def load_model_once():
     global _model
     if _model is None:
+        import tensorflow as tf
         _model = tf.keras.models.load_model(MODEL_PATH)
     return _model
 
 
 def predict_soil_image(image_bytes: bytes):
+    import numpy as np
+    from PIL import Image
+
     model = load_model_once()
 
     img = Image.open(io.BytesIO(image_bytes)).convert("RGB")

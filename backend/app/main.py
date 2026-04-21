@@ -1,10 +1,10 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from backend.app.routes.soil import router as soil_router
-from backend.app.routes.crop import router as crop_router
-from backend.app.routes.cow import router as cow_router
-from backend.app.routes.logs import router as logs_router
+from app.routes.soil import router as soil_router
+from app.routes.crop import router as crop_router
+from app.routes.cow import router as cow_router
+from app.routes.logs import router as logs_router
 
 app = FastAPI(title="FarmGuard Unified API")
 
@@ -20,7 +20,6 @@ app.include_router(soil_router)
 app.include_router(crop_router)
 app.include_router(cow_router)
 app.include_router(logs_router)
-
 
 @app.get("/health")
 def health():

@@ -1,6 +1,32 @@
-export const API_BASE_URL = "http://127.0.0.1:8000";
+export const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
 
-export async function submitSoilSnap({ image, fieldTag, notes, texture, degradation }) {
+async function handleResponse(res, label) {
+  if (!res.ok) {
+    let message = `${label} request failed with status ${res.status}`;
+
+    try {
+      const errorData = await res.json();
+      if (errorData?.detail) {
+        message += `: ${errorData.detail}`;
+      }
+    } catch {
+      // ignore JSON parse errors and keep default message
+    }
+
+    throw new Error(message);
+  }
+
+  return res.json();
+}
+
+export async function submitSoilSnap({
+  image,
+  fieldTag,
+  notes,
+  texture,
+  degradation,
+}) {
   const formData = new FormData();
   formData.append("image", image);
   formData.append("field_tag", fieldTag);
@@ -13,14 +39,15 @@ export async function submitSoilSnap({ image, fieldTag, notes, texture, degradat
     body: formData,
   });
 
-  if (!res.ok) {
-    throw new Error(`Soil request failed with status ${res.status}`);
-  }
-
-  return res.json();
+  return handleResponse(res, "Soil");
 }
 
-export async function submitCropScreen({ image, fieldTag, notes, cropSelected }) {
+export async function submitCropScreen({
+  image,
+  fieldTag,
+  notes,
+  cropSelected,
+}) {
   const formData = new FormData();
   formData.append("image", image);
   formData.append("field_tag", fieldTag);
@@ -32,11 +59,7 @@ export async function submitCropScreen({ image, fieldTag, notes, cropSelected })
     body: formData,
   });
 
-  if (!res.ok) {
-    throw new Error(`Crop request failed with status ${res.status}`);
-  }
-
-  return res.json();
+  return handleResponse(res, "Crop");
 }
 
 export async function submitCowBehavior({ image, fieldTag, notes }) {
@@ -50,23 +73,13 @@ export async function submitCowBehavior({ image, fieldTag, notes }) {
     body: formData,
   });
 
-  if (!res.ok) {
-    throw new Error(`Cow request failed with status ${res.status}`);
-  }
-
-  return res.json();
+  return handleResponse(res, "Cow");
 }
 
 export async function getLogs(limit = 25, feature = "") {
-  const url = feature
-    ? `${API_BASE_URL}/logs?limit=${limit}&feature=${feature}`
-    : `${API_BASE_URL}/logs?limit=${limit}`;
+  const params = new URLSearchParams({ limit: String(limit) });
+  if (feature) params.append("feature", feature);
 
-  const res = await fetch(url);
-
-  if (!res.ok) {
-    throw new Error(`Logs request failed with status ${res.status}`);
-  }
-
-  return res.json();
+  const res = await fetch(`${API_BASE_URL}/logs?${params.toString()}`);
+  return handleResponse(res, "Logs");
 }

@@ -2,20 +2,26 @@ from pathlib import Path
 import json
 import io
 
-import torch
-import torch.nn as nn
-from PIL import Image
-from torchvision import models, transforms
-
 BASE_DIR = Path(__file__).resolve().parents[2]
 MODEL_DIR = BASE_DIR / "models" / "crop"
 IMAGE_SIZE = 224
 
-_device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+_device = None
 _loaded_models = {}
 
 
+def get_device():
+    global _device
+    if _device is None:
+        import torch
+        _device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    return _device
+
+
 def build_model(num_classes: int):
+    from torchvision import models
+    import torch.nn as nn
+
     model = models.resnet18(weights=None)
     in_features = model.fc.in_features
     model.fc = nn.Linear(in_features, num_classes)
@@ -23,6 +29,8 @@ def build_model(num_classes: int):
 
 
 def get_transform():
+    from torchvision import transforms
+
     return transforms.Compose([
         transforms.Resize((IMAGE_SIZE, IMAGE_SIZE)),
         transforms.ToTensor(),
@@ -39,10 +47,10 @@ def get_crop_assets(crop_name: str):
 
     if crop_name == "bell_pepper":
         return {
-        "model_path": MODEL_DIR / "pepper_disease_resnet18_v2.pth",
-        "class_names_path": MODEL_DIR / "pepper_class_names.json",
-        "display_crop": "bell pepper",
-    }
+            "model_path": MODEL_DIR / "pepper_disease_resnet18_v2.pth",
+            "class_names_path": MODEL_DIR / "pepper_class_names.json",
+            "display_crop": "bell pepper",
+        }
 
     raise ValueError(f"Unsupported crop: {crop_name}")
 
@@ -53,14 +61,17 @@ def load_model_once(crop_name: str):
     if crop_name in _loaded_models:
         return _loaded_models[crop_name]
 
+    import torch
+
+    device = get_device()
     assets = get_crop_assets(crop_name)
 
     with open(assets["class_names_path"], "r", encoding="utf-8") as f:
         class_names = json.load(f)
 
     model = build_model(len(class_names))
-    model.load_state_dict(torch.load(assets["model_path"], map_location=_device))
-    model.to(_device)
+    model.load_state_dict(torch.load(assets["model_path"], map_location=device))
+    model.to(device)
     model.eval()
 
     _loaded_models[crop_name] = (model, class_names, assets["display_crop"])
@@ -78,10 +89,14 @@ def clean_label(label: str):
 
 
 def predict_crop_image(image_bytes: bytes, crop_name: str):
+    import torch
+    from PIL import Image
+
+    device = get_device()
     model, class_names, display_crop = load_model_once(crop_name)
 
     image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
-    tensor = get_transform()(image).unsqueeze(0).to(_device)
+    tensor = get_transform()(image).unsqueeze(0).to(device)
 
     with torch.no_grad():
         outputs = model(tensor)

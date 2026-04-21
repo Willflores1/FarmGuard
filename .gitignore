@@ -31,6 +31,12 @@ build/
 # Training/output clutter
 outputs/
 
-# Large model files
+# Ignore model files by default
 *.pth
 *.keras
+
+# Keep the deployed FarmGuard model weights
+!backend/models/cow/cow_behavior_resnet18.pth
+!backend/models/crop/pepper_disease_resnet18_v2.pth
+!backend/models/crop/potato_disease_resnet18.pth
+!backend/models/soil/soil_moisture_binary.keras

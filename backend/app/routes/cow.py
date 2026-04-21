@@ -1,8 +1,8 @@
 from fastapi import APIRouter, UploadFile, File, Form
 
-from backend.app.services.cow_service import predict_cow_image
-from backend.app.services.storage_service import upload_image_bytes
-from backend.app.services.firestore_service import save_log
+from app.services.cow_service import predict_cow_image
+from app.services.storage_service import upload_image_bytes
+from app.services.firestore_service import save_log
 
 router = APIRouter()
 
